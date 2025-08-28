@@ -28,15 +28,15 @@ The pipeline is built with modularity and scalability in mind, demonstrating cor
 ```
 
 .
-├── etl\_scripts/
-│   └── extract\_transform.py      \# The main ETL script (E & T & L)
-├── streamlit\_app/
-│   └── app.py                    \# The Streamlit dashboard application
+├── etl_scripts/
+│   └── extract_transform.py      # The main ETL script (E & T & L)
+├── streamlit_app/
+│   └── app.py                    # The Streamlit dashboard application
 ├── data/
-│   └── financial\_data.db         \# The SQLite database (automatically generated)
-├── .gitignore                    \# Specifies files to be ignored by Git
-├── requirements.txt              \# Lists all project dependencies
-└── README.md                     \# This documentation file
+│   └── financial_data.db         # The SQLite database (automatically generated)
+├── .gitignore                    # Specifies files to be ignored by Git
+├── requirements.txt              # Lists all project dependencies
+└── README.md                     # This documentation file
 
 ````
 
