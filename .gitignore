@@ -1,13 +1,20 @@
-# Ignore Python virtual environment directory
-venv/
-
-# Ignore temporary data files
-data/
-
-# Ignore Python cache files
-__pycache__/
-*.pyc
-
-# Ignore system files
+# Fichiers et dossiers généraux
 .DS_Store
-Thumbs.db
+.env
+.idea/
+*.log
+__pycache__/
+
+# Environnement virtuel
+venv/
+env/
+
+# Fichiers de données
+data/financial_data.db
+
+# Fichiers Docker
+.docker/
+
+# Fichiers spécifiques à Python
+*.pyc
+.pytest_cache/
