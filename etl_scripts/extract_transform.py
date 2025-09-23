@@ -1,7 +1,7 @@
 import yfinance as yf
 import pandas as pd
 from datetime import datetime, timedelta
-from sqlalchemy import create_engine, text
+import psycopg2
 import logging
 import sys
 import os
@@ -15,15 +15,12 @@ END_DATE = datetime.now().strftime('%Y-%m-%d')
 START_DATE = (datetime.now() - timedelta(days=730)).strftime('%Y-%m-%d')
 
 # --- Récupération des variables d'environnement pour PostgreSQL ---
-# C'est la solution professionnelle pour gérer les informations de connexion
 DB_HOST = os.environ.get('DB_HOST')
 DB_PORT = os.environ.get('DB_PORT')
 DB_NAME = os.environ.get('DB_NAME')
 DB_USER = os.environ.get('DB_USER')
 DB_PASSWORD = os.environ.get('DB_PASSWORD')
 
-# Chaîne de connexion construite à partir des variables d'environnement
-DB_CONNECTION_STRING = f'postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
 TABLE_NAME = 'financial_data'
 
 def extract_stock_data(tickers: list) -> pd.DataFrame:
@@ -75,46 +72,71 @@ def transform_stock_data(df: pd.DataFrame) -> pd.DataFrame:
         logging.error(f"Error during data transformation: {e}")
         return pd.DataFrame()
 
-def load_to_db(df: pd.DataFrame, connection_string: str, table_name: str):
+def load_to_db(df: pd.DataFrame, db_host: str, db_port: str, db_name: str, db_user: str, db_password: str, table_name: str):
     """
-    Étape de Chargement (L).
+    Étape de Chargement (L) avec psycopg2.
     """
     logging.info(f"Starting data loading into PostgreSQL database...")
     try:
-        engine = create_engine(connection_string)
+        # Connexion à la base de données
+        conn = psycopg2.connect(
+            host=db_host,
+            port=db_port,
+            database=db_name,
+            user=db_user,
+            password=db_password
+        )
         
-        # Le code de création de la table doit s'exécuter dans sa propre connexion
-        with engine.connect() as conn:
-            create_table_sql = f"""
-            CREATE TABLE IF NOT EXISTS {table_name} (
-                symbol TEXT NOT NULL,
-                date DATE NOT NULL,
-                open REAL,
-                high REAL,
-                low REAL,
-                close REAL,
-                volume INTEGER,
-                average_price REAL,
-                daily_gain REAL,
-                PRIMARY KEY (symbol, date)
-            );
-            """
-            conn.execute(text(create_table_sql))
-            logging.info(f"Table '{table_name}' checked or created successfully.")
-            
-        # L'insertion des données se fait directement via l'objet engine
-        # to_sql est une méthode de Pandas qui se connecte et insère les données.
-        df.to_sql(table_name, con=engine, if_exists='replace', index=False)
+        cursor = conn.cursor()
         
-        # Vérification de l'insertion des données
-        with engine.connect() as conn:
-            count_query = f"SELECT COUNT(*) FROM {table_name};"
-            count = pd.read_sql(count_query, conn).iloc[0, 0]
-            logging.info(f"Loading completed. {count} rows successfully inserted into the table '{table_name}'.")
-
+        # Création de la table si elle n'existe pas
+        create_table_query = f"""
+        CREATE TABLE IF NOT EXISTS {table_name} (
+            symbol VARCHAR(10),
+            date DATE,
+            open DECIMAL(10,2),
+            high DECIMAL(10,2),
+            low DECIMAL(10,2),
+            close DECIMAL(10,2),
+            volume BIGINT,
+            average_price DECIMAL(10,2),
+            daily_gain DECIMAL(10,4)
+        );
+        """
+        cursor.execute(create_table_query)
+        
+        # Suppression des données existantes
+        cursor.execute(f"DELETE FROM {table_name};")
+        
+        # Insertion des nouvelles données
+        insert_query = f"""
+        INSERT INTO {table_name} (symbol, date, open, high, low, close, volume, average_price, daily_gain)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);
+        """
+        
+        # Conversion du DataFrame en liste de tuples
+        data_tuples = [tuple(row) for row in df.values]
+        
+        # Insertion par batch
+        cursor.executemany(insert_query, data_tuples)
+        
+        # Commit des changements
+        conn.commit()
+        
+        # Vérification de l'insertion
+        cursor.execute(f"SELECT COUNT(*) FROM {table_name};")
+        count = cursor.fetchone()[0]
+        logging.info(f"Loading completed. {count} rows successfully inserted into the table '{table_name}'.")
+        
+        # Fermeture des connexions
+        cursor.close()
+        conn.close()
+        
     except Exception as e:
         logging.error(f"Error during data loading: {e}")
-        # En cas d'échec, le programme s'arrête
+        if 'conn' in locals():
+            conn.rollback()
+            conn.close()
         sys.exit(1)
 
 # --- Point d'entrée du pipeline ETL ---
@@ -125,7 +147,7 @@ if __name__ == "__main__":
     if not raw_data_df.empty:
         final_data_df = transform_stock_data(raw_data_df)
         if not final_data_df.empty:
-            load_to_db(final_data_df, DB_CONNECTION_STRING, TABLE_NAME)
+            load_to_db(final_data_df, DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, TABLE_NAME)
         else:
             logging.warning("Transformed DataFrame is empty. Skipping load step.")
     else:
