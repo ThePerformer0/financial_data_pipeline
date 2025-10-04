@@ -1,98 +1,86 @@
-# Financial Data ETL Pipeline & Streamlit Dashboard 📈
+# Financial Data ETL Pipeline & Streamlit Dashboard 📊
 
-## Project Overview
+## Overview
 
-This project showcases a **Data Engineering pipeline** designed to extract, transform, and load (ETL) financial market data from public APIs into a structured database. The processed data is then visualized through an interactive dashboard built with Streamlit.
+This project implements a modular and scalable **Data Engineering pipeline** for extracting, transforming, and loading (ETL) financial market data from public APIs into a structured database. The processed data is visualized through an interactive **Streamlit** dashboard, enabling users to explore stock trends and performance metrics.
 
-The pipeline is built with modularity and scalability in mind, demonstrating core data engineering principles.
-
-**Key Features:**
-
-* **Automated Data Ingestion:** A Python script automates the process of fetching daily stock data.
-* **Data Transformation:** Raw data is processed to calculate key financial indicators like `average_price` and `daily_gain`.
-* **Structured Storage:** Cleaned data is loaded into a relational database (`PostgreSQL`) for easy querying and analysis.
-* **Interactive Visualization:** A Streamlit application provides a user-friendly dashboard to explore stock trends and performance.
+### Key Features
+- **Automated Data Ingestion**: Fetches daily stock data using Python and public APIs.
+- **Data Transformation**: Processes raw data to compute financial metrics like `average_price` and `daily_gain`.
+- **Structured Storage**: Stores cleaned data in a **PostgreSQL** database for efficient querying.
+- **Interactive Visualization**: Provides a user-friendly Streamlit dashboard for data exploration.
 
 ## Technical Stack
 
-* **Python:** The primary programming language for the entire pipeline.
-* **`yfinance`:** A powerful library used to extract financial data from Yahoo! Finance.
-* **`pandas`:** Essential for data manipulation and transformation (ETL's 'T' step).
-* **`psycopg2`:** PostgreSQL database connector for Python.
-* **`PostgreSQL`:** Robust relational database for storing financial data.
-* **`Apache Airflow`:** Workflow orchestration and scheduling.
-* **`Streamlit`:** A framework for building the interactive web dashboard.
-* **`Git` & `GitHub`:** Used for version control and project hosting.
+- **Python 3.8+**: Core programming language for the pipeline.
+- **yfinance**: Library for extracting financial data from Yahoo Finance.
+- **pandas**: Handles data manipulation and transformation.
+- **psycopg2**: PostgreSQL connector for Python.
+- **PostgreSQL**: Relational database for storing processed data.
+- **Apache Airflow**: Orchestrates and schedules ETL workflows.
+- **Streamlit**: Framework for building the interactive dashboard.
+- **Git & GitHub**: Version control and project hosting.
+- **Docker**: Optional for containerized setup and deployment.
 
 ## Project Structure
 
 ```
-
-.
-* **Structured Storage:** Cleaned data is loaded into a relational database (`PostgreSQL`) for easy querying and analysis.
-│   └── extract_transform.py      # The main ETL script (E & T & L)
+financial_data_pipeline/
+├── etl_scripts/
+│   └── extract_transform.py   # ETL script for data extraction, transformation, and loading
 ├── streamlit_app/
-│   └── app.py                    # The Streamlit dashboard application
+│   └── app.py                # Streamlit dashboard application
 ├── data/
-│   └── financial_data.db         # The SQLite database (automatically generated)
-├── .gitignore                    # Specifies files to be ignored by Git
-├── requirements.txt              # Lists all project dependencies
-└── README.md                     # This documentation file
+│   └── financial_data.db     # SQLite database (auto-generated, for lightweight testing)
+├── dags/
+│   └── financial_etl_dag.py  # Airflow DAG for pipeline orchestration
+├── docker-compose.yaml       # Docker configuration for containerized setup
+├── .gitignore                # Specifies files ignored by Git
+├── requirements.txt          # Project dependencies
+└── README.md                 # Project documentation
+```
 
-````
-
-## How to Run the Project
+## Setup and Installation
 
 Follow these steps to set up and run the project locally.
 
 ### Prerequisites
+- Python 3.8+
+- PostgreSQL (local or remote)
+- Apache Airflow (optional for orchestration)
+- Git
+- Docker (optional for containerized setup)
 
-* PostgreSQL (local ou distant)
-* Apache Airflow
-* Python 3.8+
-* Git
-* Docker (recommended for easy setup)
-
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/ThePerformer0/financial_data_pipeline.git
 cd financial_data_pipeline
-````
+```
 
-### 2\. Set up the environment
+### 2. Set Up a Virtual Environment
 
-It's highly recommended to use a virtual environment to manage dependencies.
+Use a virtual environment to manage dependencies.
 
 ```bash
 # Create and activate a virtual environment
 python -m venv venv
-### 3. Configure environment variables
 
-### Alternative: Run with Docker
+# On macOS/Linux
+source venv/bin/activate
 
-You can run the ETL and dashboard using Docker for easier setup and isolation.
+# On Windows (PowerShell)
+.\venv\Scripts\Activate
 
-#### On Windows (PowerShell)
-```powershell
-
-Set the following environment variables for PostgreSQL connection (replace with your values):
-
-```powershell
-
-#### On Linux/macOS (bash)
-```bash
-$env:DB_HOST="localhost"
-$env:DB_PORT="5432"
-$env:DB_NAME="your_db_name"
-
-This will build and start all containers defined in `docker-compose.yaml`.
-The ETL will run, the dashboard will be available (check the ports in your compose file), and the database will be started automatically.
-$env:DB_USER="your_db_user"
-$env:DB_PASSWORD="your_db_password"
+# Install dependencies
+pip install -r requirements.txt
 ```
 
-Or in bash:
+### 3. Configure Environment Variables
+
+Set the following environment variables for PostgreSQL connectivity (replace with your values):
+
+#### On macOS/Linux (bash)
 ```bash
 export DB_HOST="localhost"
 export DB_PORT="5432"
@@ -100,128 +88,92 @@ export DB_NAME="your_db_name"
 export DB_USER="your_db_user"
 export DB_PASSWORD="your_db_password"
 ```
-# On macOS/Linux:
-source venv/bin/activate
-# On Windows (PowerShell):
-.\venv\Scripts\Activate
 
-# Install the required libraries
-pip install -r requirements.txt
+#### On Windows (PowerShell)
+```powershell
+$env:DB_HOST="localhost"
+$env:DB_PORT="5432"
+$env:DB_NAME="your_db_name"
+$env:DB_USER="your_db_user"
+$env:DB_PASSWORD="your_db_password"
 ```
 
+Alternatively, define these variables in the `docker-compose.yaml` file if using Docker.
 
-If you use Docker, these environment variables can be set in the `docker-compose.yaml` file under the relevant service.
-### 3\. Run the ETL Pipeline
+### 4. Run the ETL Pipeline
 
-This script will fetch the data and populate the SQLite database.
+Execute the ETL script to fetch, transform, and load data into the database.
 
 ```bash
 python etl_scripts/extract_transform.py
 ```
 
+### 5. Launch the Streamlit Dashboard
 
-Or with Docker (if not using Airflow):
-```bash
-### 4\. Launch the Streamlit Dashboard
-
-Open a new terminal, activate the virtual environment, and navigate to the `streamlit_app` directory.
-docker compose run etl
-
-sudo docker compose run etl
-### 6. Orchestration avec Airflow
-
-Apache Airflow permet d'automatiser et de planifier l'exécution du pipeline ETL.
-
-#### Installation
-
-Installez Airflow et les providers nécessaires :
-
-```bash
-
-Or with Docker:
-```bash
-pip install apache-airflow apache-airflow-providers-postgres
-docker compose up dashboard
-```
-sudo docker compose up dashboard
-
-#### Quick Start
-
-Apache Airflow automates and schedules the ETL pipeline execution.
-
-#### Installation
-
-Install Airflow and the required providers:
-
-```bash
-pip install apache-airflow apache-airflow-providers-postgres
-```
-
-#### Quick Start
-
-1. Initialize the Airflow database:
-  ```bash
-  airflow db init
-  ```
-2. Create an admin user:
-  ```bash
-  airflow users create --username admin --firstname First --lastname Last --role Admin --email admin@example.com --password admin
-  ```
-3. Start the webserver and scheduler:
-  ```bash
-  airflow webserver -p 8080
-  airflow scheduler
-  ```
-4. Place the `financial_etl_dag.py` file in Airflow's `dags/` folder.
-5. Check the Airflow UI (http://localhost:8080), enable the DAG, and monitor execution.
-
-#### Educational Notes
-
-- The Airflow DAG orchestrates extraction, transformation, and loading of financial data.
-- It reuses your existing Python functions for consistency and maintainability.
-- Logging helps you track each step and debug issues.
-- You can change the schedule or add steps as needed.
-
-1. Initialize the Airflow database:
-  ```bash
-  airflow db init
-  ```
-2. Create an admin user:
-  ```bash
-  airflow users create --username admin --firstname Firstname --lastname Lastname --role Admin --email admin@example.com --password admin
-  ```
-3. Start the webserver and scheduler:
-  ```bash
-  airflow webserver -p 8080
-  airflow scheduler
-  ```
-4. Place the `financial_etl_dag.py` file in Airflow's `dags/` folder.
-5. Check the Airflow interface (http://localhost:8080), ensure the DAG appears, and enable it.
-
-#### Educational Notes
-
-- The Airflow DAG orchestrates extraction, transformation, and loading of data.
-- It reuses your existing Python functions for consistency and maintainability.
-- Logging helps you track each step and debug issues easily.
-- You can change the execution frequency or add steps as needed.
+Run the Streamlit application to view the interactive dashboard.
 
 ```bash
 cd streamlit_app
 streamlit run app.py
 ```
 
-Your web browser will automatically open the dashboard.
+The dashboard will open automatically in your default web browser (typically at `http://localhost:8501`).
 
-## Potential Future Enhancements
+### 6. Orchestrate with Apache Airflow (Optional)
 
-This project is designed to be a foundation. Here are some ideas to evolve it into a more advanced data engineering solution:
+Use Apache Airflow to automate and schedule the ETL pipeline.
 
-  * **Orchestration:** Use a tool like **Apache Airflow** or **Prefect** to schedule the ETL script to run automatically every day.
-  * **Cloud Migration:** Migrate the pipeline to a cloud provider like AWS (S3 for data lake, Redshift for data warehouse) or GCP (Cloud Storage, BigQuery).
-  * **Data Warehouse:** Use a more robust database like **PostgreSQL** or **Snowflake** to handle larger volumes and more complex queries.
-  * **API & Microservices:** Develop a REST API using **FastAPI** to serve the data instead of a dashboard.
-  * **Advanced Analytics:** Incorporate more complex transformations, such as calculating technical indicators (e.g., Moving Averages, RSI) or integrating with machine learning models for stock prediction.
+#### Installation
+```bash
+pip install apache-airflow apache-airflow-providers-postgres
+```
 
-## Contribution
+#### Quick Start
+1. Initialize the Airflow database:
+   ```bash
+   airflow db init
+   ```
+2. Create an admin user:
+   ```bash
+   airflow users create --username admin --firstname Firstname --lastname Lastname --role Admin --email admin@example.com --password admin
+   ```
+3. Start the Airflow webserver and scheduler:
+   ```bash
+   airflow webserver -p 8080
+   airflow scheduler
+   ```
+4. Copy `financial_etl_dag.py` to Airflow's `dags/` folder.
+5. Access the Airflow UI at `http://localhost:8080`, enable the DAG, and monitor execution.
 
-Feel free to suggest improvements or enhancements by opening an issue or submitting a pull request.
+#### Notes
+- The Airflow DAG orchestrates the ETL process, reusing Python functions for consistency.
+- Logging is implemented to track steps and debug issues.
+- Customize the schedule or add tasks in `financial_etl_dag.py` as needed.
+
+### 7. Run with Docker (Optional)
+
+For a containerized setup, use Docker to simplify deployment.
+
+```bash
+docker compose up
+```
+
+This starts the ETL pipeline, Streamlit dashboard, and PostgreSQL database. Check `docker-compose.yaml` for port configurations (e.g., Streamlit at `http://localhost:8501`).
+
+## Future Enhancements
+
+- **Advanced Orchestration**: Integrate **Prefect** or enhance Airflow for more complex workflows.
+- **Cloud Deployment**: Migrate to AWS (S3, Redshift) or GCP (Cloud Storage, BigQuery) for scalability.
+- **Data Warehouse**: Use **Snowflake** or **PostgreSQL** for handling larger datasets.
+- **API Development**: Build a **FastAPI** REST API to serve data dynamically.
+- **Analytics**: Add technical indicators (e.g., RSI, Moving Averages) or machine learning models for predictive analytics.
+
+## Contributing
+
+Contributions are welcome! Please:
+1. Open an issue to discuss proposed changes.
+2. Submit a pull request with your enhancements.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
